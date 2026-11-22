@@ -5,37 +5,49 @@ content language setting.
 
 ## Status
 
-The add-on is experimental and targets Kodi 21 and newer. Live Yle integration and Kodi playback are not yet fully
-verified. It includes:
+The add-on is experimental and targets Kodi 21 and newer. Browsing, search and on-demand playback have been tried in
+Kodi 21.3 on Linux, including with inputstream.adaptive. Other platforms have not been tested.
 
-- a Kodi plug-in entry point and stable `plugin://` navigation URLs;
-- Swedish Yle Arenan browsing and search by default, with Finnish Yle Areena available in settings;
-- TV-page sections discovered from the structured `__NEXT_DATA__` payload;
-- navigation from supported catalogue sections to series pages;
-- an experimental playback resolver and subtitle hand-off (not yet verified end-to-end);
-- Finnish, Swedish, and English interface strings;
-- explicit handling for network, malformed-response, unavailable, protected, and configuration errors.
+What works:
 
-Yle's web/player interfaces are undocumented and can change. Catalogue lists and search require valid client application
-credentials, which are not supplied with this add-on. Configure credentials you are authorized to use in Kodi settings;
-never commit them or temporary manifest URLs. The player API uses separate application credentials; configure those
-separately. Playback is not yet verified. Live TV, account authentication, DRM bypass, and access-control bypass are not
-supported.
+- **Main menu:** live TV channels first, then the genre categories from the website's "Sök och bläddra" menu, then the
+  catalogue sections of the TV page. Sections show the thumbnail of their first item and the titles of the first few in
+  the plot text.
+- **Series:** opening a series shows its episodes directly, with the other lists (such as clips) after them. Lists that
+  Yle pages in several requests are merged, and the "Se mer" similar-content lists are left out.
+- **Search and settings:** both are in the context menu (long-press or right-click) on any item.
+- **Playback:** on-demand programmes and live TV channels (Yle TV1, TV2 and Teema Fem) play through
+  inputstream.adaptive. Live channels are marked as live so Kodi does not mark them as watched.
+- **Credentials:** a **Fetch credentials from Yle** button in the settings fills in the four credential fields.
+- **Languages:** Swedish (the default) and Finnish content, with English, Swedish and Finnish interface strings.
+- **Errors:** network, malformed-response, unavailable and configuration problems are shown in a dialog instead of
+  failing silently.
+
+Not supported: radio channels, the Direkt "Sport" list, podcasts, account sign-in ("Mina" and favourites), and anything
+that needs DRM or other access-control bypass.
+
+Yle's web and player interfaces are undocumented and can change without notice.
+See [docs/technical.md](docs/technical.md)
+for what has been observed.
 
 ## Installation
 
-Install the add-on from the packaged ZIP when a release package is produced. Kodi 21 or newer and the
-`inputstream.adaptive` add-on are required. The repository's local development environment currently has Kodi 21.3 with
-InputStream Adaptive 21.5.22 available through Flatpak.
+Download the latest zip from the [releases page](https://github.com/catatafishen/yle-arenan-kodi/releases) and install
+it in Kodi with **Add-ons > Install from
+zip file**. Kodi 21 or newer and the `inputstream.adaptive` add-on are required.
+
+The add-on needs four credentials to talk to Yle. After installing, open the add-on settings and press **Fetch
+credentials from Yle**. They are the same public application keys that Yle's own website gives every browser, read from
+the site on your own machine, so you get whatever Yle serves to a browser in your region. They are never part of this
+repository. If the button fails, for example because Yle changed its pages, the fields can still be filled in by hand
+from the browser's network tab.
+
+Choose **Content language** in the settings to switch between Swedish (the default) and Finnish.
 
 For local development, run the **Run Yle Areena Kodi plugin** configuration. It copies the add-on into the Flatpak Kodi
 profile and launches Kodi in a window. On first discovery, Kodi may leave it disabled: go to **Add-ons > My add-ons >
-Video add-ons > Yle Arenan / Areena**, select **Enable**, then open it under **Add-ons > Video add-ons**. Choose
-**Content language** in the add-on settings to switch between Swedish (the default) and Finnish.
-
-Open the add-on settings and provide the Yle client ID and client key required by the observed web endpoints. If Yle
-changes or restricts those interfaces, the add-on will report the service error rather than treating the content as
-playable.
+Video add-ons > Yle Arenan / Areena**, select **Enable**, then open it under **Add-ons > Video add-ons**. The
+development environment uses Kodi 21.3 with InputStream Adaptive 21.5.22 from Flatpak.
 
 ## Development setup
 
@@ -94,15 +106,20 @@ attaches the zip. The version is stamped into the zip's `addon.xml` only, so `ad
 editing. Add `[skip-release]` to a commit message to keep it out of the version calculation. Pull requests build the zip
 as an artifact but never create a release.
 
+`master` is protected: changes go in through a pull request and the `build` check must pass. Use a squash or rebase
+merge with a Conventional Commit title, since the commit messages decide the version.
+
 ## Repository layout
 
 - `addon.xml` - Kodi metadata and runtime dependencies.
 - `default.py` - Kodi plug-in entry point and UI adapter.
-- `yleareena/` - routes, settings, HTTP transport, service logic, models, and response parsers.
-- `resources/settings.xml` - client credential and user-agent settings.
+- `yleareena/` - routes, settings, HTTP transport, service logic, models, response parsers and the credential fetcher.
+- `resources/settings.xml` - credential, language and user-agent settings, and the fetch button.
 - `resources/language/` - English, Finnish, and Swedish strings.
-- `tests/` - focused parser, service, and route tests.
-- `docs/technical.md` - investigation notes and implementation constraints.
+- `tests/` - parser, service, route, credential and entry-point tests.
+- `tools/` - Kodi development launcher and desktop controls.
+- `docs/technical.md` - what was observed about Yle's web and player interfaces, and the constraints that follow.
+- `AGENTS.md` - rules for automated coding agents working in this repository.
 
 ## Security and compatibility
 
