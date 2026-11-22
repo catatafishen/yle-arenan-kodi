@@ -1,95 +1,147 @@
-# Technical investigation
+# Technical notes
 
-This document records the web and player behaviour observed while investigating a possible Yle Areena Kodi integration. The interfaces described here are undocumented implementation details and may change without notice. The observations are not a guarantee that every programme, platform, or region is supported.
+This document records how Yle's web and player interfaces behave, as observed in a browser and from the add-on while
+building it. The interfaces are undocumented implementation details and may change without notice. Observations were
+made on 22 November 2026 from Finland, without signing in, spoofing a location, or bypassing access controls or DRM.
 
-## Investigation scope
+## Pages and catalogue data
 
-The investigation used publicly accessible Yle Areena web pages on 22 November 2026. It did not spoof location, sign in to an account, bypass access controls, or attempt to defeat DRM. Playback in Kodi was not verified.
+Yle Arenan (`arenan.yle.fi`) is the Swedish-language service and Yle Areena (`areena.yle.fi`) is the Finnish-language
+service. They are separate sites with different curated sections, not translations of each other. The add-on uses
+Arenan by default; the content language setting switches the host and the API language.
 
-One globally available on-demand programme produced a player preview containing an HLS master manifest. The manifest request succeeded and exposed multiple bitrate variants, but that only demonstrates that one sample could be resolved; it does not establish general playback support.
+Every page embeds a `__NEXT_DATA__` JSON object. Its structure, as used by the add-on:
 
-## Web page data
+- `props.pageProps.view.tabs[].content[]` holds the page's blocks. Blocks of `type: "list"` have a `source.uri` that
+  points at the catalogue API and an `authentication` list. Lists that need `ylelogin` are personal ("Min lista",
+  continue watching) and are skipped.
+- A list's `source.uri` carries a signed `token`. Its payload contains a `cardOptionsTemplate`, which tells the kind of
+  list. `recommendations` is the "Se mer" similar-content list and is skipped; `episodes` is a series' episode list.
+- `props.browseMenuContent.tvBlocks` is the "Sök och bläddra" menu. Blocks of type `categoryImageLinks` and
+  `categoryLinks` hold the genres (Serier, Film, Dokumentärer, ...) as `yleareena://packages/<id>` links. A genre page
+  is `/tv/program/<id>` and has the same shape as the TV page.
+- `props.pageProps` also holds `view`, `meta`, `selectedTab` and the service name. The add-on fetches pages with plain
+  HTTP, not a browser, so everything it needs has to be in this payload or in the API responses it links to.
 
-Yle Arenan (`arenan.yle.fi`) is the Swedish-language service and Yle Areena (`areena.yle.fi`) is the Finnish-language service. The add-on defaults to Arenan; the content language setting switches the TV and item pages as well as the search API language. The two TV pages have different curated sections, not just translated labels.
+Section ids used by the add-on are `<tab index>:<content index>`, so they are only stable for the same page version.
+Because of that, folders refetch the page and look the section up again instead of storing the signed token.
 
-Both sites include a `__NEXT_DATA__` JSON object. The structured data observed on series and TV pages included:
-
-- series tabs and programme lists;
-- browse categories;
-- filters and options;
-- pagination metadata;
-- programme, clip, series, and package pointers;
-- titles, descriptions, and image metadata.
-
-An add-on should parse structured fields and stable identifiers rather than translated tab labels or rendered HTML. Fields may be absent or renamed, so parsing must validate response shapes and report service errors instead of silently treating malformed data as an empty catalogue.
-
-## Observed service endpoints
-
-### Search
+### Catalogue API
 
 ```text
 https://areena.api.yle.fi/v1/ui/search
+https://areena.api.yle.fi/v1/ui/content/list?token=...
 ```
 
-Observed responses contained a `data` array of cards. Cards included a `pointer` with a type and URI, title, description, and image metadata. Pagination information was also returned.
+Both return `data`, an array of cards, and `meta` with `offset`, `limit` and `count`. Pages are 25 items; the add-on
+fetches consecutive pages (up to 10) and merges them so Kodi shows one list. A card has a `pointer` (`type` and `uri`
+such as `yleareena://items/1-123`), a `title`, a `description` and labels. Pointer types `program`, `programme`,
+`clip` and `episode` are playable; `series` and packages open another page.
 
-Pointer types need separate handling. A programme or clip can become a playable item, while a series or package should open another Kodi folder. Search pagination should use the response's pagination data and should not assume that a fixed page size or a translated label remains stable.
+Durations are in the card's `labels` as ISO 8601 (`PT1H2M3S`). Not every card has one.
 
-### Player preview
+### Images
+
+Images are given as `{id, version}`, not a URL. This builds a working 16:9 URL:
+
+```text
+https://images.cdn.yle.fi/image/upload/w_640,ar_16:9,c_fill/<id>
+```
+
+### Live channels
+
+The Direkt page (`/direkt`) has a "TV-kanaler" list at `areena.api.yle.fi/v1/ui/schedules/now.json?service=yle-tv1,...`.
+Its cards have `pointer.type: "player"` and a `.../players/yle-tv1.json` URI. The programme on air is the card title,
+the channel is in the `broadcastService` label and the time slot in the `generic` label. The add-on shows the channel as
+the item title and the programme and time in the plot. The list changes through the day, so it is fetched each time the
+menu opens. There are also a "Sport" list and radio channels on Direkt that are not used.
+
+## Credentials
+
+Both APIs need an application id and key. Requests without them return HTTP 403. They are public values that Yle's own
+website hands to every browser:
+
+| Pair                           | Where the browser gets it                                                                |
+|--------------------------------|------------------------------------------------------------------------------------------|
+| Catalogue (`areena-web-items`) | `window.envVariables.appIdFrontend` and `appKeyFrontend`, an inline script on every page |
+| Player (`player_static_prod`)  | A string in the player bundle `https://player-v2.yle.fi/embed.js` and its chunks         |
+
+The player chunk filenames contain a content hash. The add-on reads the chunk list from the webpack runtime in
+`embed.js` instead of hardcoding a name. The settings page has a button that fetches both pairs over HTTP from the
+user's own machine, so the values are what Yle serves to a browser in that region. They are not stored in the
+repository.
+
+There is no public Yle media API. See Yle's [developer documentation](https://developer.yle.fi/en/api/index.html).
+
+## Player preview
 
 ```text
 https://player.api.yle.fi/v1/preview/{id}.json
 ```
 
-For the sample programme, availability and metadata were under:
+The id is a programme id (`1-76547052`) or a channel id (`yle-tv1`). The browser sends these query parameters, and the
+add-on sends the same ones:
 
 ```text
- data.ongoing_ondemand
+app_id, app_key, language=swe|fin, countryCode=FI, host=arenan.yle.fi|areena.yle.fi,
+isMobile=false, isPortabilityRegion=true, ssl=true
 ```
 
-The observed data included an expiring `manifest_url`, audio tracks, and subtitle information. The web player also recognizes states including `pending_ondemand`, `pending_event`, `gone`, `blocked`, `not_allowed`, `not_allowed_channel`, `identification`, and `error`; these are keys under `data`, not necessarily a `state` string. The add-on reports these separately, and rejects unknown response shapes. A separate programme tested in Kodi returned `not_allowed`; the cause of the originally reported episode's failure has not been established. Its public page labels it Finland-only, which is not sufficient by itself to determine why the player refused it.
+### The `Origin` header
 
-The manifest URL is temporary. It must be resolved at playback time, never stored in a Kodi favourite, committed to the repository, or written to normal logs.
+This is the one detail that mattered for playback. With the same URL, parameters and IP address, the API returns
+`not_allowed` to a plain request and a playable response to a request that has an `Origin` header with any Yle site.
+`Referer`, `User-Agent`, cookies and other browser headers made no difference. The add-on sends
+`Origin: https://arenan.yle.fi` on `player.api.yle.fi` requests. Responses are also cached for about 30 seconds, so
+test header changes with a cache-busting parameter.
 
-## Required request details
+### Response states
 
-The web interfaces use client application identifiers or keys. Requests made without the required client information returned HTTP 403 during the investigation. The correct long-term credential strategy is unresolved. Do not copy browser secrets, session cookies, signed URLs, or tokens into source control.
+The result is one key under `data`:
 
-Before implementation, determine whether the intended integration is permitted and maintainable. Yle's developer documentation states that there is no public media API. Any implementation must respect Yle's terms, authentication requirements, geographic restrictions, and content protection. It must not bypass DRM or access controls.
+- `ongoing_ondemand` - an on-demand programme. Contains `manifest_url`, audio tracks and subtitles.
+- `ongoing_channel` - a live channel. Contains `manifest_url` and a `dvr_window_in_seconds` (4 hours for the TV
+  channels).
+- `not_allowed`, `not_allowed_channel`, `blocked`, `gone`, `pending_ondemand`, `pending_event`, `identification` and
+  `error` - the content cannot be played. The add-on reports each in its own message.
+- `ongoing_event` - a live event, which the add-on does not support.
 
-## Proposed Kodi playback flow
+### Manifests
 
-1. Browse or search using catalogue data and keep only stable content identifiers in item URLs.
-2. When a user selects a playable item, request a fresh player preview.
-3. Validate availability and inspect the returned media and protection state.
-4. Pass a supported HLS or DASH stream to Kodi's `inputstream.adaptive` when the content and platform allow it.
-5. Pass subtitle information to Kodi when supported and expose audio-track choices through the player.
-6. Surface a clear error for missing inputstream support, expired links, unavailable content, region restrictions, authentication requirements, protection modes, network failures, and unexpected response formats.
+`manifest_url` is an HLS master playlist on Akamai (`yleawsmpondemand-*.akamaized.net` for on demand,
+`yletv.akamaized.net/hls/live/...` for TV channels). It is signed and temporary, so it is requested when playback starts
+and is never stored, put in a favourite, committed or logged. Kodi fetches it without an `Origin` header.
 
-Kodi favourites should contain stable `plugin://` URLs built from content IDs and navigation parameters. They must not contain the temporary manifest URL, request tokens, or list pagination tokens. A favourite should reopen the same folder or item after Kodi restarts, including when cached catalogue data has expired.
+`is_content_protected: true` is set on many programmes, including ones that play normally. The HLS playlists of those
+had no `#EXT-X-KEY` or DRM signalling in the master playlist, and they play in Kodi through inputstream.adaptive, so the
+add-on does not block on this flag. A protected stream that really is encrypted will fail in Kodi.
 
-## Architecture implications
+## Kodi behaviour
 
-Keep the service client, response parsing, and playback resolver independent from Kodi UI modules. This makes it possible to test them with saved, redacted response fixtures and mocked HTTP responses. The Kodi layer should be responsible for directory items, localized labels, playback hand-off, notifications, and settings.
+- Menu entries use `getVideoInfoTag()` (Kodi 20+) for title, plot, duration and media type.
+- Lists set their content type (`episodes`, `tvshows`, `videos`) so skins can pick a suitable view. Kodi plugins cannot
+  add a sidebar of their own; search and settings are in the item context menu.
+- Kodi marks a played item as watched once most of it has played. Live channels are given media type `video`, a play
+  count of 0 and `IsLive=true`, and this stops them being marked as watched.
+- A `RunPlugin` action in the settings (the fetch button) runs without a directory, so it handles its own errors and
+  does not call `endOfDirectory`.
 
-Use bounded timeouts, certificate validation, and limited retries only for appropriate transient failures. Cache catalogue metadata for a bounded period, but do not cache signed media URLs. Store settings and local state under Kodi's add-on profile rather than the installation directory, and redact credentials and signed URLs from logs.
+## Verified
 
-The add-on should target Kodi 21 and newer. `inputstream.adaptive` is a platform dependency and must be declared by the add-on rather than bundling platform-specific binaries. Codec, DRM/CDM, subtitle, and inputstream support can vary between LibreELEC, desktop, Android, and other Kodi platforms.
+Tried in Kodi 21.3 on Linux with inputstream.adaptive 21.5.22:
 
-## Verification still required
+- browsing the main menu, categories, sections and series;
+- search;
+- playback of on-demand programmes and live TV channels;
+- the credentials button.
 
-The following were not established by the investigation and require implementation testing:
+## Not verified
 
-- playback of the sample manifest in Kodi;
-- playback behaviour across Kodi-supported platforms;
-- subtitle and alternate-audio handling;
+- other platforms (LibreELEC, Android, other desktops) and codecs;
+- subtitles and alternate audio tracks, although subtitle URLs are passed on when the preview has them;
 - resume behaviour;
-- protected or DRM-backed programmes;
-- region-restricted and account-only content;
-- expiry and refresh behaviour for preview and manifest URLs;
-- continued availability and permission to use the observed web interfaces.
-
-A test plan should include representative fixtures for successful playback, missing fields, expired content, HTTP errors, protection states, pagination, and each pointer type. End-to-end playback should be tested on actual Kodi devices, not only in a desktop Python environment.
+- genuinely DRM-protected programmes and content that is restricted to a region or account;
+- the long-term availability of these interfaces and the credential locations.
 
 ## References
 
