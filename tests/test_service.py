@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from yleareena.config import load_settings
 from yleareena.errors import YleConfigurationError, YleResponseError
+from yleareena.parser import page_sections
 from yleareena.service import YleService
 
 
@@ -82,6 +83,34 @@ def test_section_refetches_source_and_merges_pages(host: str) -> None:
     assert params["token"] == ["short-lived"]
     assert len(page.items) == 30
     assert not page.has_next
+
+
+def test_package_pages_open_their_untitled_list() -> None:
+    class PackageClient(FakeClient):
+        def get_text(self, url: str) -> str:
+            self.text_urls.append(url)
+            data = {"props": {"pageProps": {"view": {"title": "Inez favoriter", "tabs": [{"content": [
+                {"type": "list", "presentation": "medium-grid", "source": {
+                    "uri": "https://areena.api.yle.fi/v1/ui/content/list?token=t",
+                    "authentication": ["yle-api"]}}]}]}}}}
+            return '<script id="__NEXT_DATA__" type="application/json">' + json.dumps(data) + '</script>'
+
+    client = PackageClient()
+    service = YleService(client=client, client_id="id", client_key="key")
+    page = service.browse_uri("yleareena://packages/30-5722")
+    assert client.text_urls == ["https://arenan.yle.fi/tv/program/30-5722"]
+    assert [(item.title, item.pointer_type) for item in page.items] == [("Inez favoriter", "section")]
+
+
+def test_hero_banner_is_not_listed_as_a_section() -> None:
+    data = {"props": {"pageProps": {"view": {"title": "Home", "tabs": [{"content": [
+        {"type": "list", "presentation": "hero", "source": {
+            "uri": "https://areena.api.yle.fi/v1/ui/content/list?token=hero", "authentication": ["yle-api"]}},
+        {"type": "list", "title": "Series", "source": {
+            "uri": "https://areena.api.yle.fi/v1/ui/content/list?token=series", "authentication": ["yle-api"]}},
+    ]}]}}}}
+    html = '<script id="__NEXT_DATA__" type="application/json">' + json.dumps(data) + '</script>'
+    assert [title for _, title, _ in page_sections(html)] == ["Series"]
 
 
 def test_player_uses_separate_credentials() -> None:
