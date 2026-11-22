@@ -83,3 +83,23 @@ msgstr "Ruotsi (Yle Arenan)"
 msgctxt "#30020"
 msgid "Finnish (Yle Areena)"
 msgstr "Suomi (Yle Areena)"
+
+msgctxt "#30021"
+msgid "Fetch credentials from Yle"
+msgstr "Hae tunnistetiedot Yleltä"
+
+msgctxt "#30022"
+msgid "Reads the application credentials that Yle's website gives browsers in your region, and fills in the four fields below."
+msgstr "Lukee sovellustunnisteet, jotka Ylen verkkosivusto antaa alueesi selaimille, ja täyttää alla olevat neljä kenttää."
+
+msgctxt "#30023"
+msgid "Credentials updated"
+msgstr "Tunnistetiedot päivitetty"
+
+msgctxt "#30024"
+msgid "The client and player credentials were fetched from Yle and saved."
+msgstr "Asiakas- ja soittimen tunnistetiedot haettiin Yleltä ja tallennettiin."
+
+msgctxt "#30025"
+msgid "Could not fetch credentials"
+msgstr "Tunnistetietojen haku epäonnistui"

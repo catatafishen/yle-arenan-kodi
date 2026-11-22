@@ -21,7 +21,7 @@ class HttpClient:
             timeout: float = 15.0,
             retries: int = 2,
             allowed_hosts: tuple[str, ...] = ("areena.api.yle.fi", "player.api.yle.fi", "areena.yle.fi",
-                                              "arenan.yle.fi"),
+                                              "arenan.yle.fi", "player-v2.yle.fi"),
     ) -> None:
         self.headers = {"Accept": "application/json", **(headers or {})}
         self.timeout = timeout

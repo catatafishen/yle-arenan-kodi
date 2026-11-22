@@ -9,10 +9,12 @@ import xbmcgui
 import xbmcplugin
 
 from yleareena.config import load_settings
+from yleareena.credentials import fetch_credentials
 from yleareena.errors import YleError
+from yleareena.http import HttpClient
 from yleareena.models import ContentItem, Page
 from yleareena.routes import Route, parse_route, plugin_url
-from yleareena.service import YleService
+from yleareena.service import PAGE_HOSTS, YleService
 
 HANDLE = int(sys.argv[1]) if len(sys.argv) > 1 else -1
 ADDON = xbmcaddon.Addon()
@@ -135,9 +137,28 @@ def _play(route: Route, service: YleService) -> None:
     xbmcplugin.setResolvedUrl(HANDLE, True, list_item)
 
 
+def _fetch_credentials() -> None:
+    """Settings button: store the credentials Yle's website serves to browsers in this region."""
+    language = load_settings(ADDON).language
+    try:
+        credentials = fetch_credentials(HttpClient(), f"https://{PAGE_HOSTS[language]}/tv")
+    except YleError as error:
+        xbmc.log(f"{ADDON_ID}: could not fetch credentials: {error}", xbmc.LOGERROR)
+        xbmcgui.Dialog().ok(_label(30025), str(error))
+        return
+    ADDON.setSetting("client_id", credentials.client_id)
+    ADDON.setSetting("client_key", credentials.client_key)
+    ADDON.setSetting("player_client_id", credentials.player_client_id)
+    ADDON.setSetting("player_client_key", credentials.player_client_key)
+    xbmcgui.Dialog().ok(_label(30023), _label(30024))
+
+
 def _dispatch(route: Route) -> None:
     if route.action == "settings":
         ADDON.openSettings()
+        return
+    if route.action == "fetch_credentials":
+        _fetch_credentials()
         return
     service = _service()
     if route.action in ("root", "browse_tv"):

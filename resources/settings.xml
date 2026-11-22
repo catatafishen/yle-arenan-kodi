@@ -1,49 +1,68 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <settings version="1">
-  <section id="plugin.video.ylearenakodi">
-    <category id="service" label="30010">
-      <group id="credentials">
-        <setting id="language" type="string" label="30018">
-          <level>0</level>
-          <default>sv</default>
-          <constraints>
-            <options>
-              <option label="30019">sv</option>
-              <option label="30020">fi</option>
-            </options>
-          </constraints>
-          <control type="spinner" format="string" />
-        </setting>
-        <setting id="client_id" type="string" label="30011" help="30012">
-          <level>0</level>
-          <default></default>
-          <constraints><allowempty>true</allowempty></constraints>
-          <control type="edit" format="string" />
-        </setting>
-        <setting id="client_key" type="string" label="30013" help="30014">
-          <level>0</level>
-          <default></default>
-          <constraints><allowempty>true</allowempty></constraints>
-          <control type="edit" format="string"><hidden>true</hidden></control>
-        </setting>
-        <setting id="player_client_id" type="string" label="30016">
-          <level>0</level>
-          <default></default>
-          <constraints><allowempty>true</allowempty></constraints>
-          <control type="edit" format="string" />
-        </setting>
-        <setting id="player_client_key" type="string" label="30017" help="30014">
-          <level>0</level>
-          <default></default>
-          <constraints><allowempty>true</allowempty></constraints>
-          <control type="edit" format="string"><hidden>true</hidden></control>
-        </setting>
-        <setting id="user_agent" type="string" label="30015">
-          <level>0</level>
-          <default>YleAreenaKodi/0.1</default>
-          <control type="edit" format="string" />
-        </setting>
-      </group>
-    </category>
-  </section>
+    <section id="plugin.video.ylearenakodi">
+        <category id="service" label="30010">
+            <group id="credentials">
+                <setting id="fetch_credentials" type="action" label="30021" help="30022">
+                    <level>0</level>
+                    <data>RunPlugin(plugin://plugin.video.ylearenakodi/?action=fetch_credentials)</data>
+                    <control type="button" format="action">
+                        <close>true</close>
+                    </control>
+                </setting>
+                <setting id="language" type="string" label="30018">
+                    <level>0</level>
+                    <default>sv</default>
+                    <constraints>
+                        <options>
+                            <option label="30019">sv</option>
+                            <option label="30020">fi</option>
+                        </options>
+                    </constraints>
+                    <control type="spinner" format="string"/>
+                </setting>
+                <setting id="client_id" type="string" label="30011" help="30012">
+                    <level>0</level>
+                    <default></default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string"/>
+                </setting>
+                <setting id="client_key" type="string" label="30013" help="30014">
+                    <level>0</level>
+                    <default></default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string">
+                        <hidden>true</hidden>
+                    </control>
+                </setting>
+                <setting id="player_client_id" type="string" label="30016">
+                    <level>0</level>
+                    <default></default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string"/>
+                </setting>
+                <setting id="player_client_key" type="string" label="30017" help="30014">
+                    <level>0</level>
+                    <default></default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string">
+                        <hidden>true</hidden>
+                    </control>
+                </setting>
+                <setting id="user_agent" type="string" label="30015">
+                    <level>0</level>
+                    <default>YleAreenaKodi/0.1</default>
+                    <control type="edit" format="string"/>
+                </setting>
+            </group>
+        </category>
+    </section>
 </settings>

@@ -83,3 +83,23 @@ msgstr "Swedish (Yle Arenan)"
 msgctxt "#30020"
 msgid "Finnish (Yle Areena)"
 msgstr "Finnish (Yle Areena)"
+
+msgctxt "#30021"
+msgid "Fetch credentials from Yle"
+msgstr "Fetch credentials from Yle"
+
+msgctxt "#30022"
+msgid "Reads the application credentials that Yle's website gives browsers in your region, and fills in the four fields below."
+msgstr "Reads the application credentials that Yle's website gives browsers in your region, and fills in the four fields below."
+
+msgctxt "#30023"
+msgid "Credentials updated"
+msgstr "Credentials updated"
+
+msgctxt "#30024"
+msgid "The client and player credentials were fetched from Yle and saved."
+msgstr "The client and player credentials were fetched from Yle and saved."
+
+msgctxt "#30025"
+msgid "Could not fetch credentials"
+msgstr "Could not fetch credentials"
