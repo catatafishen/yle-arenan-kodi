@@ -76,6 +76,24 @@ are never overwritten. Run `python3 tools/kodi_control.py --help` for all comman
 Starting Kodi deploys the current add-on and uses the normal Flatpak profile; restart Kodi to deploy later source
 changes.
 
+## Releases and versioning
+
+Every push to `master` runs the tests and builds the add-on zip. The version is worked out automatically
+from [Conventional Commits](https://www.conventionalcommits.org) since the last release tag,
+using [semantic versioning](https://semver.org):
+
+| Commit                                                   | Release               |
+|----------------------------------------------------------|-----------------------|
+| `fix: ...`, `perf: ...`                                  | patch (0.1.0 → 0.1.1) |
+| `feat: ...`                                              | minor (0.1.0 → 0.2.0) |
+| `feat!: ...`, or a `BREAKING CHANGE:` footer             | major (0.1.0 → 1.0.0) |
+| `docs:`, `chore:`, `ci:`, `test:`, `refactor:`, `style:` | no release            |
+
+When a release is due, the workflow tags the commit (`v0.2.0`), publishes a GitHub release with generated notes, and
+attaches the zip. The version is stamped into the zip's `addon.xml` only, so `addon.xml` in the repository does not need
+editing. Add `[skip-release]` to a commit message to keep it out of the version calculation. Pull requests build the zip
+as an artifact but never create a release.
+
 ## Repository layout
 
 - `addon.xml` - Kodi metadata and runtime dependencies.

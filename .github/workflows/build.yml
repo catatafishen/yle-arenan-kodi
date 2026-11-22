@@ -3,61 +3,79 @@ name: Build
 on:
   push:
     branches: [ master, main ]
-    tags: [ "v*" ]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history and tags, needed to work out the next version
+
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest -q
 
-  package:
-    needs: test
-    runs-on: ubuntu-latest
-    outputs:
-      zip: ${{ steps.zip.outputs.name }}
-    steps:
-      - uses: actions/checkout@v4
+      # Reads Conventional Commits since the last tag. feat -> minor, fix -> patch,
+      # "!" or BREAKING CHANGE -> major; docs/chore/ci/test/etc. produce no release.
+      # Only pushes to the default branch create a tag; elsewhere it is a dry run.
+      - name: Work out the next version
+        id: tag
+        uses: mathieudutour/github-tag-action@v7
+        with:
+          github_token: ${{ github.token }}
+          default_bump: false
+          dry_run: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name != 'push' }}
+
       - name: Build the Kodi add-on zip
         id: zip
+        env:
+          # The next version when a release is due, otherwise the last tag, otherwise addon.xml's own.
+          VERSION: ${{ steps.tag.outputs.new_version || steps.tag.outputs.previous_version }}
         run: |
           addon_id=$(sed -n 's/.*<addon id="\([^"]*\)".*/\1/p' addon.xml | head -n 1)
-          version=$(sed -n 's/.*<addon [^>]*version="\([^"]*\)".*/\1/p' addon.xml | head -n 1)
-          test -n "$addon_id" && test -n "$version"
-          name="${addon_id}-${version}.zip"
+          [ "$VERSION" = "0.0.0" ] && VERSION=$(sed -n 's/.*<addon [^>]*version="\([^"]*\)".*/\1/p' addon.xml | head -n 1)
+          test -n "$addon_id" && test -n "$VERSION"
+          name="${addon_id}-${VERSION}.zip"
           mkdir -p "dist/${addon_id}"
           cp addon.xml default.py "dist/${addon_id}/"
           cp -r yleareena resources "dist/${addon_id}/"
           find "dist/${addon_id}" -name '__pycache__' -type d -prune -exec rm -rf {} +
+          # Stamp the computed version into the packaged addon.xml only.
+          sed -i "/<addon /s/ version=\"[^\"]*\"/ version=\"${VERSION}\"/" "dist/${addon_id}/addon.xml"
+          grep -q "<addon [^>]*version=\"${VERSION}\"" "dist/${addon_id}/addon.xml"
           (cd dist && zip -r -q "$name" "$addon_id")
           unzip -l "dist/$name"
           echo "name=$name" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.zip.outputs.name }}
           path: dist/*.zip
           if-no-files-found: error
 
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: package
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
+      # A tag is only created on the default branch when a releasable commit exists,
+      # so new_tag is empty otherwise and no release is published.
+      - name: Publish the release
+        if: github.event_name == 'push' && steps.tag.outputs.new_tag != '' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: softprops/action-gh-release@v3
         with:
-          name: ${{ needs.package.outputs.zip }}
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ needs.package.outputs.zip }}
+          tag_name: ${{ steps.tag.outputs.new_tag }}
+          name: ${{ steps.tag.outputs.new_tag }}
+          body: ${{ steps.tag.outputs.changelog }}
+          files: dist/*.zip
