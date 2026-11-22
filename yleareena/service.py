@@ -58,10 +58,11 @@ class YleService:
 
     def _page_url(self, uri: str) -> str:
         parts = urlsplit(uri)
-        if parts.scheme == "yleareena" and parts.netloc == "items":
+        if parts.scheme == "yleareena" and parts.netloc in ("items", "packages"):
             item_id = parts.path.strip("/")
             if item_id and "/" not in item_id and not parts.query and not parts.fragment:
-                return f"https://{PAGE_HOSTS[self.language]}/{quote(item_id, safe='-')}"
+                prefix = "tv/program/" if parts.netloc == "packages" else ""
+                return f"https://{PAGE_HOSTS[self.language]}/{prefix}{quote(item_id, safe='-')}"
         if parts.scheme == "https" and parts.netloc in PAGE_HOSTS.values():
             return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ""))
         raise YleResponseError("Unsupported Arenan or Areena page link")

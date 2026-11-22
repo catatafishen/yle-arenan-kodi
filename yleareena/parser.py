@@ -190,6 +190,11 @@ def parse_next_data(html: str) -> Mapping[str, Any]:
 
 
 def page_sections(html: str) -> list[tuple[str, str, str]]:
+    """The public lists on a page as (id, title, API uri).
+
+    A list is named after itself, else its tab, else the page: package pages hold a single untitled list.
+    The home page's hero banner is never included.
+    """
     data = parse_next_data(html)
     try:
         view = data["props"]["pageProps"]["view"]
@@ -198,12 +203,13 @@ def page_sections(html: str) -> list[tuple[str, str, str]]:
         raise YleResponseError("Areena page did not contain catalogue tabs") from error
     if not isinstance(tabs, list):
         raise YleResponseError("Areena page catalogue tabs were invalid")
+    page_title = _text(view.get("title")) if isinstance(view, Mapping) else ""
     sections: list[tuple[str, str, str]] = []
     for tab_index, tab in enumerate(tabs):
         if not isinstance(tab, Mapping) or not isinstance(tab.get("content"), list):
             continue
         for index, content in enumerate(tab["content"]):
-            section = _section(content, _text(tab.get("title")))
+            section = _section(content, _text(tab.get("title")) or page_title)
             if section:
                 sections.append((f"{tab_index}:{index}", *section))
     return sections
@@ -211,7 +217,7 @@ def page_sections(html: str) -> list[tuple[str, str, str]]:
 
 def _section(content: Any, tab_title: str) -> tuple[str, str] | None:
     """Return (title, uri) for a public catalogue list, or None for anything else."""
-    if not isinstance(content, Mapping) or content.get("type") != "list":
+    if not isinstance(content, Mapping) or content.get("type") != "list" or content.get("presentation") == "hero":
         return None
     source = content.get("source")
     if not isinstance(source, Mapping):
