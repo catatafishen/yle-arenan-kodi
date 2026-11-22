@@ -1,0 +1,85 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: plugin.video.ylearenakodi\n"
+"Language: fi_FI\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgctxt "#30001"
+msgid "Search"
+msgstr "Haku"
+
+msgctxt "#30002"
+msgid "Browse TV"
+msgstr "Selaa TV:tä"
+
+msgctxt "#30003"
+msgid "Settings"
+msgstr "Asetukset"
+
+msgctxt "#30004"
+msgid "Next page"
+msgstr "Seuraava sivu"
+
+msgctxt "#30005"
+msgid "Search Yle Arenan / Areena"
+msgstr "Hae Yle Areenasta"
+
+msgctxt "#30006"
+msgid "Enter search term"
+msgstr "Anna hakusana"
+
+msgctxt "#30007"
+msgid "Playback unavailable"
+msgstr "Toisto ei ole käytettävissä"
+
+msgctxt "#30008"
+msgid "Open settings"
+msgstr "Avaa asetukset"
+
+msgctxt "#30009"
+msgid "No results"
+msgstr "Ei tuloksia"
+
+msgctxt "#30010"
+msgid "Service settings"
+msgstr "Palveluasetukset"
+
+msgctxt "#30011"
+msgid "Client ID"
+msgstr "Asiakastunniste"
+
+msgctxt "#30012"
+msgid "Optional client application identifier required by some Yle web endpoints."
+msgstr "Joidenkin Ylen verkkorajapintojen tarvitsema valinnainen sovellustunniste."
+
+msgctxt "#30013"
+msgid "Client key"
+msgstr "Asiakasavain"
+
+msgctxt "#30014"
+msgid "Optional client application key. Never share or commit this value."
+msgstr "Valinnainen sovellusavain. Älä jaa tai tallenna sitä versionhallintaan."
+
+msgctxt "#30015"
+msgid "User-Agent"
+msgstr "User-Agent"
+
+msgctxt "#30016"
+msgid "Player client ID"
+msgstr "Soittimen asiakastunniste"
+
+msgctxt "#30017"
+msgid "Player client key"
+msgstr "Soittimen asiakasavain"
+
+msgctxt "#30018"
+msgid "Content language"
+msgstr "Sisällön kieli"
+
+msgctxt "#30019"
+msgid "Swedish (Yle Arenan)"
+msgstr "Ruotsi (Yle Arenan)"
+
+msgctxt "#30020"
+msgid "Finnish (Yle Areena)"
+msgstr "Suomi (Yle Areena)"

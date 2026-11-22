@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.pytest_cache/
+
+# IDE and tooling state
+.idea/
+*.iml
+.agentbridge/
+.agent-work/
+.playwright-mcp/
+
+# Build output
+dist/

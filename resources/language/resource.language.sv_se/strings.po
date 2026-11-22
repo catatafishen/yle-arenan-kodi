@@ -1,0 +1,85 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: plugin.video.ylearenakodi\n"
+"Language: sv_SE\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgctxt "#30001"
+msgid "Search"
+msgstr "Sök"
+
+msgctxt "#30002"
+msgid "Browse TV"
+msgstr "Bläddra i TV"
+
+msgctxt "#30003"
+msgid "Settings"
+msgstr "Inställningar"
+
+msgctxt "#30004"
+msgid "Next page"
+msgstr "Nästa sida"
+
+msgctxt "#30005"
+msgid "Search Yle Arenan / Areena"
+msgstr "Sök i Yle Arenan"
+
+msgctxt "#30006"
+msgid "Enter search term"
+msgstr "Ange sökord"
+
+msgctxt "#30007"
+msgid "Playback unavailable"
+msgstr "Uppspelning är inte tillgänglig"
+
+msgctxt "#30008"
+msgid "Open settings"
+msgstr "Öppna inställningar"
+
+msgctxt "#30009"
+msgid "No results"
+msgstr "Inga resultat"
+
+msgctxt "#30010"
+msgid "Service settings"
+msgstr "Tjänsteinställningar"
+
+msgctxt "#30011"
+msgid "Client ID"
+msgstr "Klient-ID"
+
+msgctxt "#30012"
+msgid "Optional client application identifier required by some Yle web endpoints."
+msgstr "Valfri klientidentifierare som vissa av Yles webbtjänster kräver."
+
+msgctxt "#30013"
+msgid "Client key"
+msgstr "Klientnyckel"
+
+msgctxt "#30014"
+msgid "Optional client application key. Never share or commit this value."
+msgstr "Valfri klientnyckel. Dela eller versionshantera aldrig värdet."
+
+msgctxt "#30015"
+msgid "User-Agent"
+msgstr "User-Agent"
+
+msgctxt "#30016"
+msgid "Player client ID"
+msgstr "Spelarens klient-ID"
+
+msgctxt "#30017"
+msgid "Player client key"
+msgstr "Spelarens klientnyckel"
+
+msgctxt "#30018"
+msgid "Content language"
+msgstr "Innehållets språk"
+
+msgctxt "#30019"
+msgid "Swedish (Yle Arenan)"
+msgstr "Svenska (Yle Arenan)"
+
+msgctxt "#30020"
+msgid "Finnish (Yle Areena)"
+msgstr "Finska (Yle Areena)"

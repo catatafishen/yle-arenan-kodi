@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches: [ master, main ]
+    tags: [ "v*" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      zip: ${{ steps.zip.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Kodi add-on zip
+        id: zip
+        run: |
+          addon_id=$(sed -n 's/.*<addon id="\([^"]*\)".*/\1/p' addon.xml | head -n 1)
+          version=$(sed -n 's/.*<addon [^>]*version="\([^"]*\)".*/\1/p' addon.xml | head -n 1)
+          test -n "$addon_id" && test -n "$version"
+          name="${addon_id}-${version}.zip"
+          mkdir -p "dist/${addon_id}"
+          cp addon.xml default.py "dist/${addon_id}/"
+          cp -r yleareena resources "dist/${addon_id}/"
+          find "dist/${addon_id}" -name '__pycache__' -type d -prune -exec rm -rf {} +
+          (cd dist && zip -r -q "$name" "$addon_id")
+          unzip -l "dist/$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.zip.outputs.name }}
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.package.outputs.zip }}
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ needs.package.outputs.zip }}

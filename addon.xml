@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.ylearenakodi" name="Yle Arenan / Areena" version="0.1.0" provider-name="yle-arenan-kodi">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+    <import addon="inputstream.adaptive" version="21.5.0" />
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Browse and play Yle Arenan and Areena content</summary>
+    <summary lang="fi_FI">Selaa ja toista Yle Areenan sisältöä</summary>
+    <summary lang="sv_SE">Bläddra bland och spela innehåll från Yle Arenan</summary>
+    <description lang="en_GB">An unofficial Kodi add-on for Yle Arenan and Yle Areena on-demand content, with Swedish as the default content language.</description>
+    <description lang="fi_FI">Epävirallinen Kodi-lisäosa Yle Areenan tilausvideoiden selaamiseen ja toistamiseen.</description>
+    <description lang="sv_SE">Ett inofficiellt Kodi-tillägg för att bläddra bland och spela upp innehåll från Yle Arenan.</description>
+    <platform>all</platform>
+  </extension>
+</addon>
