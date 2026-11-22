@@ -106,8 +106,9 @@ attaches the zip. The version is stamped into the zip's `addon.xml` only, so `ad
 editing. Add `[skip-release]` to a commit message to keep it out of the version calculation. Pull requests build the zip
 as an artifact but never create a release.
 
-`master` is protected: changes go in through a pull request and the `build` check must pass. Use a squash or rebase
-merge with a Conventional Commit title, since the commit messages decide the version.
+`master` is protected: changes go in through a pull request and the `build` check must pass. Pull requests can only
+be merged with "Rebase and merge", which keeps each commit as it is, so every commit message must be a valid
+Conventional Commit: the messages decide the version.
 
 ## Repository layout
 
